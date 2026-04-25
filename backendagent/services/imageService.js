@@ -1,6 +1,6 @@
 const axios = require("axios");
 
-const IMAGE_STORAGE_URL = process.env.IMAGE_STORAGE_URL || "http://localhost:3001";
+const IMAGE_STORAGE_URL = process.env.IMAGE_STORAGE_URL || "https://mediastorage.wikihash.io";
 
 async function uploadToImageStorage(imageUrl) {
   try {
