@@ -1,0 +1,6 @@
+node_modules/
+# .env
+# .env.port
+*.log
+.DS_Store
+package-lock.json

@@ -1,0 +1,51 @@
+{
+  "categories": [
+    "Crypto News",
+    "Web3",
+    "Blockchain",
+    "DeFi",
+    "NFTs",
+    "Exchanges",
+    "Bitcoin",
+    "Ethereum",
+    "Altcoins",
+    "Crypto Regulation",
+    "Mining",
+    "Staking",
+    "DAOs",
+    "Metaverse",
+    "GameFi"
+  ],
+  "headerCategories": [
+    "Exchanges",
+    "Web3",
+    "Bitcoin",
+    "Blockchain"
+  ],
+  "newsSources": [
+    "https://cointelegraph.com",
+    "https://coindesk.com",
+    "https://decrypt.co",
+    "https://cryptonews.com",
+    "https://news.bitcoin.com"
+  ],
+  "articleSettings": {
+    "minLength": 800,
+    "maxLength": 2500,
+    "shortPostProbability": 0.3,
+    "noImageProbability": 0.1,
+    "twoImageProbability": 0.2,
+    "unsplashImageProbability": 0.8,
+    "includeTableProbability": 0.4,
+    "includeYouTubeProbability": 0.3,
+    "includeExternalLinksProbability": 0.6
+  },
+  "featuredArticle": {
+    "manualOverride": false,
+    "currentFeaturedId": null
+  },
+  "adsSettings": {
+    "showAdsOnHomePage": false,
+    "showAdsOnDetailPage": false
+  }
+}
