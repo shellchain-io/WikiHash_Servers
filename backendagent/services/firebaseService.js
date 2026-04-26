@@ -156,24 +156,71 @@ async function getUsedImageUrls() {
   try {
     const snapshot = await db.collection("articles")
       .orderBy("createdAt", "desc")
-      .limit(100)
+      .limit(200) // Increased to track more articles
       .get();
     
     const imageUrls = new Set();
     snapshot.forEach(doc => {
       const data = doc.data();
+      
+      // Add featured image
       if (data.featuredImage) {
         imageUrls.add(data.featuredImage);
       }
       if (data.image) {
         imageUrls.add(data.image);
       }
+      
+      // Extract images from HTML content
+      if (data.content) {
+        const imgRegex = /<img[^>]+src=['"]([^'"]+)['"][^>]*>/gi;
+        let match;
+        while ((match = imgRegex.exec(data.content)) !== null) {
+          imageUrls.add(match[1]);
+        }
+      }
     });
     
+    console.log(`📊 Found ${imageUrls.size} unique image URLs from recent articles`);
     return Array.from(imageUrls);
   } catch (error) {
     console.error("Error getting used image URLs:", error);
     return [];
+  }
+}
+
+async function storeArticleImages(articleId, article) {
+  try {
+    const imageUrls = new Set();
+    
+    // Add featured image
+    if (article.featuredImage) {
+      imageUrls.add(article.featuredImage);
+    }
+    if (article.image) {
+      imageUrls.add(article.image);
+    }
+    
+    // Extract images from HTML content
+    if (article.content) {
+      const imgRegex = /<img[^>]+src=['"]([^'"]+)['"][^>]*>/gi;
+      let match;
+      while ((match = imgRegex.exec(article.content)) !== null) {
+        imageUrls.add(match[1]);
+      }
+    }
+    
+    // Store in a separate collection for better tracking
+    const imageTrackingRef = db.collection("imageTracking").doc(articleId);
+    await imageTrackingRef.set({
+      articleId,
+      imageUrls: Array.from(imageUrls),
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+    
+    console.log(`📸 Stored ${imageUrls.size} image URLs for article ${articleId}`);
+  } catch (error) {
+    console.error("Error storing article images:", error);
   }
 }
 
@@ -200,6 +247,7 @@ module.exports = {
   getTopArticleByEngagement,
   getUsedTopics,
   getUsedImageUrls,
+  storeArticleImages,
   getFirestoreDoc,
   db,
 };

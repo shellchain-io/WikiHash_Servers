@@ -1,6 +1,6 @@
 const { generateArticleContent, generateTopicIdea } = require("./aiService");
 const { getArticleImages } = require("./imageService");
-const { saveArticle, getUsedTopics, getUsedImageUrls } = require("./firebaseService");
+const { saveArticle, getUsedTopics, getUsedImageUrls, storeArticleImages } = require("./firebaseService");
 const config = require("../config.json");
 
 function generateSlug(title) {
@@ -138,6 +138,10 @@ Return ONLY the HTML content, no markdown code blocks.`;
     
     console.log("Saving article to Firebase...");
     const articleId = await saveArticle(article);
+    
+    // Store image URLs for duplicate prevention
+    console.log("Storing image URLs for duplicate prevention...");
+    await storeArticleImages(articleId, { ...article, id: articleId });
     
     console.log(`✅ Article generated successfully! ID: ${articleId}`);
     return { ...article, id: articleId };
