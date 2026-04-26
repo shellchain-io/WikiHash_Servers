@@ -125,7 +125,7 @@ Return ONLY the HTML content, no markdown code blocks.`;
       slug: generateSlug(title),
       title,
       description,
-      author: "TopNewsBlog Editorial",
+      author: "WikiHash",
       date: new Date().toISOString().split("T")[0],
       category,
       tags: [...new Set(tags)],
