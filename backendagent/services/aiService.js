@@ -1,6 +1,6 @@
 const Groq = require("groq-sdk");
 const { GoogleGenAI } = require("@google/genai");
-const { getSeoKeywords } = require("./firebaseService");
+const { getSeoKeywords, getCategories, getNewsSources } = require("./firebaseService");
 
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
@@ -183,7 +183,11 @@ Write the article as if you're targeting readers interested in these specific cr
 }
 
 async function generateTopicIdea(categories, newsSources, usedTopics = []) {
-  const category = categories[Math.floor(Math.random() * categories.length)];
+  // If categories/newsSources are arrays, use them directly; otherwise fetch from Firebase
+  let categoriesList = Array.isArray(categories) ? categories : await getCategories();
+  let newsSourcesList = Array.isArray(newsSources) ? newsSources : await getNewsSources();
+  
+  const category = categoriesList[Math.floor(Math.random() * categoriesList.length)];
   
   // Select a random SEO keyword for the title from Firebase
   const allKeywords = await getSeoKeywords();

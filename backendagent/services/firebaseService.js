@@ -341,6 +341,144 @@ async function bulkImportSeoKeywords(keywords) {
   }
 }
 
+// Categories Management Functions
+async function getCategories() {
+  try {
+    const snapshot = await db.collection("categories")
+      .orderBy("name", "asc")
+      .get();
+    
+    const categories = [];
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      categories.push(data.name);
+    });
+    
+    console.log(`📊 Retrieved ${categories.length} categories from Firebase`);
+    return categories;
+  } catch (error) {
+    console.error("Error getting categories:", error);
+    // Fallback to config if Firebase fails
+    const config = require("../config.json");
+    return config.categories || [];
+  }
+}
+
+async function addCategory(categoryName) {
+  try {
+    const categoryRef = db.collection("categories").doc();
+    await categoryRef.set({
+      name: categoryName.trim(),
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+    
+    console.log(`✅ Added category: "${categoryName}"`);
+    return categoryRef.id;
+  } catch (error) {
+    console.error("Error adding category:", error);
+    throw error;
+  }
+}
+
+async function updateCategory(categoryId, categoryName) {
+  try {
+    const categoryRef = db.collection("categories").doc(categoryId);
+    await categoryRef.update({
+      name: categoryName.trim(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+    
+    console.log(`✅ Updated category: "${categoryName}"`);
+    return true;
+  } catch (error) {
+    console.error("Error updating category:", error);
+    throw error;
+  }
+}
+
+async function deleteCategory(categoryId) {
+  try {
+    const categoryRef = db.collection("categories").doc(categoryId);
+    await categoryRef.delete();
+    
+    console.log(`✅ Deleted category with ID: ${categoryId}`);
+    return true;
+  } catch (error) {
+    console.error("Error deleting category:", error);
+    throw error;
+  }
+}
+
+// News Sources Management Functions
+async function getNewsSources() {
+  try {
+    const snapshot = await db.collection("newsSources")
+      .orderBy("name", "asc")
+      .get();
+    
+    const newsSources = [];
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      newsSources.push(data.name);
+    });
+    
+    console.log(`📊 Retrieved ${newsSources.length} news sources from Firebase`);
+    return newsSources;
+  } catch (error) {
+    console.error("Error getting news sources:", error);
+    // Fallback to config if Firebase fails
+    const config = require("../config.json");
+    return config.newsSources || [];
+  }
+}
+
+async function addNewsSource(sourceName) {
+  try {
+    const sourceRef = db.collection("newsSources").doc();
+    await sourceRef.set({
+      name: sourceName.trim(),
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+    
+    console.log(`✅ Added news source: "${sourceName}"`);
+    return sourceRef.id;
+  } catch (error) {
+    console.error("Error adding news source:", error);
+    throw error;
+  }
+}
+
+async function updateNewsSource(sourceId, sourceName) {
+  try {
+    const sourceRef = db.collection("newsSources").doc(sourceId);
+    await sourceRef.update({
+      name: sourceName.trim(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+    
+    console.log(`✅ Updated news source: "${sourceName}"`);
+    return true;
+  } catch (error) {
+    console.error("Error updating news source:", error);
+    throw error;
+  }
+}
+
+async function deleteNewsSource(sourceId) {
+  try {
+    const sourceRef = db.collection("newsSources").doc(sourceId);
+    await sourceRef.delete();
+    
+    console.log(`✅ Deleted news source with ID: ${sourceId}`);
+    return true;
+  } catch (error) {
+    console.error("Error deleting news source:", error);
+    throw error;
+  }
+}
+
 module.exports = {
   saveArticle,
   getAllArticles,
@@ -356,5 +494,13 @@ module.exports = {
   updateSeoKeyword,
   deleteSeoKeyword,
   bulkImportSeoKeywords,
+  getCategories,
+  addCategory,
+  updateCategory,
+  deleteCategory,
+  getNewsSources,
+  addNewsSource,
+  updateNewsSource,
+  deleteNewsSource,
   db,
 };
