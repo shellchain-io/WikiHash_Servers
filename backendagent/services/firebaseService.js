@@ -239,6 +239,108 @@ async function getFirestoreDoc(collection, docId) {
   }
 }
 
+// SEO Keywords Management Functions
+async function getSeoKeywords() {
+  try {
+    const snapshot = await db.collection("seoKeywords")
+      .orderBy("createdAt", "desc")
+      .get();
+    
+    const keywords = [];
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      keywords.push({
+        id: doc.id,
+        keyword: data.keyword,
+        createdAt: data.createdAt,
+        updatedAt: data.updatedAt
+      });
+    });
+    
+    // Return just the keyword strings for AI service
+    const keywordStrings = keywords.map(item => item.keyword);
+    console.log(`📊 Retrieved ${keywordStrings.length} SEO keywords from Firebase`);
+    return keywordStrings;
+  } catch (error) {
+    console.error("Error getting SEO keywords:", error);
+    // Fallback to config if Firebase fails
+    const config = require("../config.json");
+    return config.seoKeywords || [];
+  }
+}
+
+async function addSeoKeyword(keyword) {
+  try {
+    const keywordRef = db.collection("seoKeywords").doc();
+    await keywordRef.set({
+      keyword: keyword.trim(),
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+    
+    console.log(`✅ Added SEO keyword: "${keyword}"`);
+    return keywordRef.id;
+  } catch (error) {
+    console.error("Error adding SEO keyword:", error);
+    throw error;
+  }
+}
+
+async function updateSeoKeyword(keywordId, keyword) {
+  try {
+    const keywordRef = db.collection("seoKeywords").doc(keywordId);
+    await keywordRef.update({
+      keyword: keyword.trim(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+    
+    console.log(`✅ Updated SEO keyword: "${keyword}"`);
+    return true;
+  } catch (error) {
+    console.error("Error updating SEO keyword:", error);
+    throw error;
+  }
+}
+
+async function deleteSeoKeyword(keywordId) {
+  try {
+    const keywordRef = db.collection("seoKeywords").doc(keywordId);
+    await keywordRef.delete();
+    
+    console.log(`✅ Deleted SEO keyword with ID: ${keywordId}`);
+    return true;
+  } catch (error) {
+    console.error("Error deleting SEO keyword:", error);
+    throw error;
+  }
+}
+
+async function bulkImportSeoKeywords(keywords) {
+  try {
+    const batch = db.batch();
+    const results = [];
+    
+    keywords.forEach(keyword => {
+      if (keyword && keyword.trim()) {
+        const keywordRef = db.collection("seoKeywords").doc();
+        batch.set(keywordRef, {
+          keyword: keyword.trim(),
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+        results.push(keywordRef.id);
+      }
+    });
+    
+    await batch.commit();
+    console.log(`✅ Bulk imported ${results.length} SEO keywords`);
+    return results;
+  } catch (error) {
+    console.error("Error bulk importing SEO keywords:", error);
+    throw error;
+  }
+}
+
 module.exports = {
   saveArticle,
   getAllArticles,
@@ -249,5 +351,10 @@ module.exports = {
   getUsedImageUrls,
   storeArticleImages,
   getFirestoreDoc,
+  getSeoKeywords,
+  addSeoKeyword,
+  updateSeoKeyword,
+  deleteSeoKeyword,
+  bulkImportSeoKeywords,
   db,
 };

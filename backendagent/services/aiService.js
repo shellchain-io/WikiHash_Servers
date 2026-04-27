@@ -1,6 +1,6 @@
 const Groq = require("groq-sdk");
 const { GoogleGenAI } = require("@google/genai");
-const config = require("../config.json");
+const { getSeoKeywords } = require("./firebaseService");
 
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
@@ -11,8 +11,8 @@ const genAI = new GoogleGenAI({
 });
 
 // Function to select all keywords systematically for content
-function selectAllKeywords(category, topic) {
-  const allKeywords = config.seoKeywords || [];
+async function selectAllKeywords(category, topic) {
+  const allKeywords = await getSeoKeywords();
   
   // Create a relevance score for each keyword
   const keywordScores = allKeywords.map(keyword => {
@@ -129,7 +129,7 @@ async function validateYouTubeLink(url) {
 
 async function generateArticleContent(prompt, category = "", topic = "") {
   // Select ALL SEO keywords systematically
-  const allSelectedKeywords = selectAllKeywords(category, topic);
+  const allSelectedKeywords = await selectAllKeywords(category, topic);
   console.log(`🔍 Including ALL SEO keywords in content: ${allSelectedKeywords.join(', ')}`);
   
   // Enhance the prompt with keyword instructions
@@ -185,9 +185,10 @@ Write the article as if you're targeting readers interested in these specific cr
 async function generateTopicIdea(categories, newsSources, usedTopics = []) {
   const category = categories[Math.floor(Math.random() * categories.length)];
   
-  // Select a random SEO keyword for the title
-  const randomKeyword = config.seoKeywords 
-    ? config.seoKeywords[Math.floor(Math.random() * config.seoKeywords.length)]
+  // Select a random SEO keyword for the title from Firebase
+  const allKeywords = await getSeoKeywords();
+  const randomKeyword = allKeywords.length > 0 
+    ? allKeywords[Math.floor(Math.random() * allKeywords.length)]
     : "";
   
   const usedTopicsText = usedTopics.length > 0 
