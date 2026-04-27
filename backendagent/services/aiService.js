@@ -1,5 +1,6 @@
 const Groq = require("groq-sdk");
 const { GoogleGenAI } = require("@google/genai");
+const config = require("../config.json");
 
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
@@ -8,6 +9,57 @@ const groq = new Groq({
 const genAI = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY,
 });
+
+// Function to select relevant keywords based on category and topic
+function selectRelevantKeywords(category, topic, count = 3) {
+  const allKeywords = config.seoKeywords || [];
+  
+  // Create a relevance score for each keyword
+  const keywordScores = allKeywords.map(keyword => {
+    let score = 0;
+    const lowerKeyword = keyword.toLowerCase();
+    const lowerCategory = category.toLowerCase();
+    const lowerTopic = topic.toLowerCase();
+    
+    // Score based on category match
+    if (lowerCategory.includes('defi') && lowerKeyword.includes('defi')) score += 3;
+    if (lowerCategory.includes('nft') && lowerKeyword.includes('nft')) score += 3;
+    if (lowerCategory.includes('bitcoin') && lowerKeyword.includes('bitcoin')) score += 3;
+    if (lowerCategory.includes('ethereum') && lowerKeyword.includes('ethereum')) score += 3;
+    if (lowerCategory.includes('web3') && lowerKeyword.includes('web3')) score += 3;
+    if (lowerCategory.includes('blockchain') && lowerKeyword.includes('blockchain')) score += 3;
+    
+    // Score based on topic match
+    const topicWords = lowerTopic.split(/\s+/);
+    topicWords.forEach(word => {
+      if (lowerKeyword.includes(word) && word.length > 3) {
+        score += 2;
+      }
+    });
+    
+    // Score based on general crypto relevance
+    if (lowerKeyword.includes('crypto') || lowerKeyword.includes('blockchain')) score += 1;
+    
+    return { keyword, score };
+  });
+  
+  // Sort by score and select top keywords
+  keywordScores.sort((a, b) => b.score - a.score);
+  
+  // If no high-scoring keywords, pick random ones
+  const topKeywords = keywordScores.slice(0, count).filter(item => item.score > 0);
+  if (topKeywords.length < count) {
+    const remainingKeywords = allKeywords.filter(kw => 
+      !topKeywords.some(item => item.keyword === kw)
+    );
+    const randomRemaining = remainingKeywords
+      .sort(() => Math.random() - 0.5)
+      .slice(0, count - topKeywords.length);
+    return [...topKeywords.map(item => item.keyword), ...randomRemaining];
+  }
+  
+  return topKeywords.map(item => item.keyword);
+}
 
 async function generateWithGroq(prompt) {
   try {
@@ -86,12 +138,32 @@ async function validateYouTubeLink(url) {
   }
 }
 
-async function generateArticleContent(prompt) {
-  let content = await generateWithGroq(prompt);
+async function generateArticleContent(prompt, category = "", topic = "") {
+  // Select relevant SEO keywords
+  const selectedKeywords = selectRelevantKeywords(category, topic, 3);
+  console.log(`🔍 Selected SEO keywords: ${selectedKeywords.join(', ')}`);
+  
+  // Enhance the prompt with keyword instructions
+  const enhancedPrompt = `${prompt}
+
+SEO REQUIREMENTS:
+Naturally incorporate the following keywords into your article content where they make sense and flow naturally:
+- ${selectedKeywords.join('\n- ')}
+
+Guidelines for keyword integration:
+- Weave these keywords naturally into sentences, don't force them
+- Use them in headings, subheadings, or important points when relevant
+- Ensure they enhance the content rather than feel stuffed
+- Maintain readability and professional tone
+- Use variations of the keywords when appropriate
+
+Write the article as if you're targeting readers interested in these specific crypto/blockchain topics while maintaining journalistic quality.`;
+
+  let content = await generateWithGroq(enhancedPrompt);
   
   if (!content) {
     console.log("Groq failed, falling back to Gemini...");
-    content = await generateWithGemini(prompt);
+    content = await generateWithGemini(enhancedPrompt);
   }
 
   if (!content) {
@@ -123,6 +195,11 @@ async function generateArticleContent(prompt) {
 async function generateTopicIdea(categories, newsSources, usedTopics = []) {
   const category = categories[Math.floor(Math.random() * categories.length)];
   
+  // Select a random SEO keyword for the title
+  const randomKeyword = config.seoKeywords 
+    ? config.seoKeywords[Math.floor(Math.random() * config.seoKeywords.length)]
+    : "";
+  
   const usedTopicsText = usedTopics.length > 0 
     ? `\n\nAVOID these recently used topics:\n${usedTopics.slice(0, 20).map(t => `- ${t}`).join('\n')}`
     : '';
@@ -133,6 +210,12 @@ async function generateTopicIdea(categories, newsSources, usedTopics = []) {
   - Specific enough to write a detailed article
   - Interesting to crypto/blockchain enthusiasts
   - UNIQUE and different from recently published articles${usedTopicsText}
+  - IMPORTANT: Include the keyword "${randomKeyword}" naturally in the title for SEO purposes
+  
+  Examples of how to include keywords:
+  - If keyword is "decentralized finance": "DeFi Revolution: How Decentralized Finance is Changing Banking"
+  - If keyword is "blockchain technology": "Blockchain Technology Breakthrough: New Protocol Launch"
+  - If keyword is "NFT marketplace": "NFT Marketplace Surge: Trading Volume Hits New High"
   
   Respond with ONLY the topic title, nothing else. Keep it under 100 characters.`;
 
@@ -142,12 +225,14 @@ async function generateTopicIdea(categories, newsSources, usedTopics = []) {
     topic = await generateWithGemini(prompt);
   }
 
-  const cleanTitle = topic ? topic.trim().replace(/^["']|["']$/g, "") : `${category}: Latest Developments`;
+  const cleanTitle = topic ? topic.trim().replace(/^["']|["']$/g, "") : `${category}: Latest ${randomKeyword} Developments`;
   
   if (usedTopics.some(used => used.toLowerCase() === cleanTitle.toLowerCase())) {
     console.log("⚠️  Generated duplicate topic, retrying...");
     return generateTopicIdea(categories, newsSources, usedTopics);
   }
+
+  console.log(`🔑 Generated title with keyword "${randomKeyword}": ${cleanTitle}`);
 
   return {
     title: cleanTitle,

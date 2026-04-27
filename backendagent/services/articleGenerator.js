@@ -73,7 +73,7 @@ Do NOT include placeholder text like [Image] or [Video]. I will add those separa
 Return ONLY the HTML content, no markdown code blocks.`;
 
     console.log("Generating article content with AI...");
-    let content = await generateArticleContent(prompt);
+    let content = await generateArticleContent(prompt, category, title);
     
     content = content.replace(/```html\n?/g, "").replace(/```\n?/g, "").trim();
     

@@ -132,5 +132,31 @@
   "adsSettings": {
     "showAdsOnHomePage": false,
     "showAdsOnDetailPage": false
-  }
+  },
+  "seoKeywords": [
+    "decentralized finance",
+    "blockchain technology",
+    "cryptocurrency trading",
+    "digital assets",
+    "crypto market analysis",
+    "NFT marketplace",
+    "Web3 development",
+    "smart contracts",
+    "crypto investment",
+    "metaverse economy",
+    "token economics",
+    "crypto regulations",
+    "yield farming",
+    "liquidity mining",
+    "DAO governance",
+    "cross-chain bridges",
+    "layer 2 scaling",
+    "stablecoin adoption",
+    "crypto security",
+    "institutional crypto",
+    "enkrypt wallet",
+    "mew wallet",
+    "metamask wallet",
+    "coinbase wallet"
+  ]
 }
