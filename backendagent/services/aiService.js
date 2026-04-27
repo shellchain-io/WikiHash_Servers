@@ -10,8 +10,8 @@ const genAI = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY,
 });
 
-// Function to select relevant keywords based on category and topic
-function selectRelevantKeywords(category, topic, count = 3) {
+// Function to select all keywords systematically for content
+function selectAllKeywords(category, topic) {
   const allKeywords = config.seoKeywords || [];
   
   // Create a relevance score for each keyword
@@ -43,22 +43,11 @@ function selectRelevantKeywords(category, topic, count = 3) {
     return { keyword, score };
   });
   
-  // Sort by score and select top keywords
+  // Sort by score but return ALL keywords (not just top 3)
   keywordScores.sort((a, b) => b.score - a.score);
   
-  // If no high-scoring keywords, pick random ones
-  const topKeywords = keywordScores.slice(0, count).filter(item => item.score > 0);
-  if (topKeywords.length < count) {
-    const remainingKeywords = allKeywords.filter(kw => 
-      !topKeywords.some(item => item.keyword === kw)
-    );
-    const randomRemaining = remainingKeywords
-      .sort(() => Math.random() - 0.5)
-      .slice(0, count - topKeywords.length);
-    return [...topKeywords.map(item => item.keyword), ...randomRemaining];
-  }
-  
-  return topKeywords.map(item => item.keyword);
+  // Return all keywords, prioritized by relevance
+  return keywordScores.map(item => item.keyword);
 }
 
 async function generateWithGroq(prompt) {
@@ -139,23 +128,24 @@ async function validateYouTubeLink(url) {
 }
 
 async function generateArticleContent(prompt, category = "", topic = "") {
-  // Select relevant SEO keywords
-  const selectedKeywords = selectRelevantKeywords(category, topic, 3);
-  console.log(`🔍 Selected SEO keywords: ${selectedKeywords.join(', ')}`);
+  // Select ALL SEO keywords systematically
+  const allSelectedKeywords = selectAllKeywords(category, topic);
+  console.log(`🔍 Including ALL SEO keywords in content: ${allSelectedKeywords.join(', ')}`);
   
   // Enhance the prompt with keyword instructions
   const enhancedPrompt = `${prompt}
 
 SEO REQUIREMENTS:
-Naturally incorporate the following keywords into your article content where they make sense and flow naturally:
-- ${selectedKeywords.join('\n- ')}
+IMPORTANT: Include ALL of the following keywords naturally throughout your article content where they make sense and flow naturally:
+- ${allSelectedKeywords.join('\n- ')}
 
 Guidelines for keyword integration:
 - Weave these keywords naturally into sentences, don't force them
 - Use them in headings, subheadings, or important points when relevant
 - Ensure they enhance the content rather than feel stuffed
 - Maintain readability and professional tone
-- Use variations of the keywords when appropriate
+- Use variations of keywords when appropriate
+- Try to include each keyword at least once where contextually appropriate
 
 Write the article as if you're targeting readers interested in these specific crypto/blockchain topics while maintaining journalistic quality.`;
 
