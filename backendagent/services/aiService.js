@@ -149,7 +149,8 @@ Guidelines for keyword integration:
 
 Write the article as if you're targeting readers interested in these specific crypto/blockchain topics while maintaining journalistic quality.`;
 
-  let content = await generateWithGroq(enhancedPrompt);
+  let content = null;
+  // let content = await generateWithGroq(enhancedPrompt);
   
   if (!content) {
     console.log("Groq failed, falling back to Gemini...");
@@ -214,7 +215,8 @@ async function generateTopicIdea(categories, newsSources, usedTopics = []) {
   
   Respond with ONLY the topic title, nothing else. Keep it under 100 characters.`;
 
-  let topic = await generateWithGroq(prompt);
+  let topic = null
+  // let topic = await generateWithGroq(prompt);
   
   if (!topic) {
     topic = await generateWithGemini(prompt);
