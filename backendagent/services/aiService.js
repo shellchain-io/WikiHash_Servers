@@ -64,7 +64,7 @@ async function generateWithGroq(prompt) {
           content: prompt,
         },
       ],
-      model: "llama-3.3-70b-versatile",
+      model: "llama-3.1-8b-instant", // Cheaper, faster model - uses fewer tokens and costs less
       temperature: 0.8,
       max_tokens: 4000,
     });
